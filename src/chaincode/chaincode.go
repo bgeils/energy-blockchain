@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"strconv"
 	"os"
+	"strconv"
+
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
 var logger = shim.NewLogger("fabric-boilerplate")
+
 //==============================================================================================================================
 //	 Structure Definitions
 //==============================================================================================================================
@@ -24,21 +26,36 @@ type ECertResponse struct {
 }
 
 type User struct {
-	UserId       string   `json:"userId"` //Same username as on certificate in CA
-	Salt         string   `json:"salt"`
-	Hash         string   `json:"hash"`
-	FirstName    string   `json:"firstName"`
-	LastName     string   `json:"lastName"`
+	UserId    string `json:"userId"` //Same username as on certificate in CA
+	Salt      string `json:"salt"`
+	Hash      string `json:"hash"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	// TODO do you want to match any orders  /transactions to the user?
 	Things       []string `json:"things"` //Array of thing IDs
 	Address      string   `json:"address"`
 	PhoneNumber  string   `json:"phoneNumber"`
 	EmailAddress string   `json:"emailAddress"`
 }
 
-type Thing struct {
-	Id          string `json:"id"`
-	Description string `json:"description"`
+type Order struct {
+	Id        string `json:"id"`
+	KwhAmount string `json:"kwhAmount"`
+	PriceKwh  string `json:"priceKwh"`
+	TimeStart int    `json:"timeStart"`
+	Duration  int    `json:"duration"`
+	SellerId  string `json:"sellerId"` // link to userID
+	SoldBool  bool   `json:"soldBool"`
 }
+
+type Transaction struct {
+	Id      string `json:"id"`
+	OrderId string `json:"orderId"`
+	Seller  string `json:"sellerId"`
+	Buyer   string `json:"buyerId"`
+}
+
+// FIXME to improve query efficiency you might want to create a TimeSlot struct under which you store the Orders for that timeslot
 
 //=================================================================================================================================
 //  Index collections - In order to create new IDs dynamically and in progressive sorting
@@ -63,9 +80,10 @@ type Thing struct {
 //    if err != nil { return nil, errors.New("Error storing new signaturesIndex into ledger") }
 //=================================================================================================================================
 var usersIndexStr = "_users"
-var thingsIndexStr = "_things"
+var ordersIndexStr = "_orders"
+var transactionsIndexStr = "_transactions"
 
-var indexes = []string{usersIndexStr, thingsIndexStr}
+var indexes = []string{usersIndexStr, transactionsIndexStr, ordersIndexStr}
 
 //==============================================================================================================================
 //	Invoke - Called on chaincode invoke. Takes a function name passed and calls that function. Passes the
@@ -81,8 +99,10 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 		return t.reset_indexes(stub, args)
 	} else if function == "add_user" {
 		return t.add_user(stub, args)
-	} else if function == "add_thing" {
-		return t.add_thing(stub, args)
+	} else if function == "add_order" {
+		return t.add_order(stub, args)
+	} else if function == "add_transaction" {
+		return t.add_transaction(stub, args)
 	}
 
 	return nil, errors.New("Received unknown invoke function name")
@@ -97,13 +117,17 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 
 	if function == "get_user" {
 		return t.get_user(stub, args[1])
-	} else if function == "get_thing" {
-		return t.get_thing(stub, args)
-	} else if function == "get_all_things" {
-		return t.get_all_things(stub, args)
+	} else if function == "get_order" {
+		return t.get_order(stub, args)
+	} else if function == "get_all_orders" {
+		return t.get_all_orders(stub, args)
 	} else if function == "authenticate" {
 		return t.authenticate(stub, args)
+	} else if function == "get_transaction" {
+		return t.get_transaction(stub, args)
 	}
+
+	// TODO get orders by timeslot
 
 	return nil, errors.New("Received unknown query function name")
 }
@@ -181,7 +205,7 @@ func (t *SimpleChaincode) reset_indexes(stub *shim.ChaincodeStub, args []string)
 		if err != nil {
 			return nil, errors.New("Error marshalling")
 		}
-		err = stub.PutState(i, empty);
+		err = stub.PutState(i, empty)
 
 		if err != nil {
 			return nil, errors.New("Error deleting index")
@@ -210,20 +234,46 @@ func (t *SimpleChaincode) add_user(stub *shim.ChaincodeStub, args []string) ([]b
 	return nil, nil
 }
 
-func (t *SimpleChaincode) add_thing(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+func (t *SimpleChaincode) add_order(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
 
 	// args
 	// 		0			1
-	//	   index	   thing JSON object (as string)
+	//	   index	   order JSON object (as string)
 
-	id, err := append_id(stub, thingsIndexStr, args[0], false)
+	id, err := append_id(stub, ordersIndexStr, args[0], false)
 	if err != nil {
-		return nil, errors.New("Error creating new id for thing " + args[0])
+		return nil, errors.New("Error creating new id for order " + args[0])
 	}
 
 	err = stub.PutState(string(id), []byte(args[1]))
 	if err != nil {
-		return nil, errors.New("Error putting thing data on ledger")
+		return nil, errors.New("Error putting order data on ledger")
+	}
+
+	return nil, nil
+
+}
+
+func (t *SimpleChaincode) add_transaction(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+	// steps
+	// 1.  get order
+	// 2a. create new transaction
+	// 2b. add transaction to ledger 
+	// 3a. set flag as sold
+	// 3b. put order back on ledger
+
+	// args
+	// 		0			1				2
+	//	 id	   orderId	buyerId
+
+	id, err := append_id(stub, transactionsIndexStr, args[0], false)
+	if err != nil {
+		return nil, errors.New("Error creating new id for transaction " + args[0])
+	}
+
+	err = stub.PutState(string(id), []byte(args[1]))
+	if err != nil {
+		return nil, errors.New("Error putting transaction data on ledger")
 	}
 
 	return nil, nil
@@ -246,52 +296,69 @@ func (t *SimpleChaincode) get_user(stub *shim.ChaincodeStub, userID string) ([]b
 
 }
 
-func (t *SimpleChaincode) get_thing(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+func (t *SimpleChaincode) get_order(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
 
 	//Args
 	//			0
-	//		thingID
+	//		orderID
 
 	bytes, err := stub.GetState(args[0])
 
 	if err != nil {
-		return nil, errors.New("Error getting from ledger")
+		return nil, errors.New("Error getting order from ledger")
 	}
 
 	return bytes, nil
 
 }
 
-func (t *SimpleChaincode) get_all_things(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+func (t *SimpleChaincode) get_transaction(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
 
-	indexAsBytes, err := stub.GetState(thingsIndexStr)
+	//Args
+	//			0
+	//		orderID
+
+	bytes, err := stub.GetState(args[0])
+
 	if err != nil {
-		return nil, errors.New("Failed to get " + thingsIndexStr)
+		return nil, errors.New("Error getting order from ledger")
 	}
 
+	return bytes, nil
+
+}
+
+// get all transactions
+func (t *SimpleChaincode) get_all_orders(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+
+	indexAsBytes, err := stub.GetState(ordersIndexStr)
+	if err != nil {
+		return nil, errors.New("Failed to get " + ordersIndexStr)
+	}
+	// TODO replace thing with order / transaction
 	// Unmarshal the index
-	var thingsIndex []string
-	json.Unmarshal(indexAsBytes, &thingsIndex)
+	var ordersIndex []string
+	json.Unmarshal(indexAsBytes, &ordersIndex)
 
-	var things []Thing
-	for _, thing := range thingsIndex {
+	var orders []Order
+	for _, order := range ordersIndex {
 
-		bytes, err := stub.GetState(thing)
+		bytes, err := stub.GetState(order)
 		if err != nil {
-			return nil, errors.New("Unable to get thing with ID: " + thing)
+			return nil, errors.New("Unable to get order with ID: " + order)
 		}
 
-		var t Thing
+		var t Order
 		json.Unmarshal(bytes, &t)
-		things = append(things, t)
+		orders = append(orders, t)
 	}
 
-	thingsAsJsonBytes, _ := json.Marshal(things)
+	ordersAsJsonBytes, _ := json.Marshal(orders)
 	if err != nil {
-		return nil, errors.New("Could not convert things to JSON ")
+		return nil, errors.New("Could not convert orders to JSON ")
 	}
 
-	return thingsAsJsonBytes, nil
+	return ordersAsJsonBytes, nil
 }
 
 func (t *SimpleChaincode) authenticate(stub *shim.ChaincodeStub, args []string) ([]byte, error) {

@@ -46,8 +46,8 @@ exports.login = function(req, res) {
                     message: 'Enjoy your token!',
                     token: token,
                     user: result.user,
-                    certRole: result.certRole,
-                    thingId: result.thingId
+                    certRole: result.certRole
+                    //thingId: result.thingId
                 });
                 
             }

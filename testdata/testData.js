@@ -13,7 +13,7 @@ exports.invokeTestData = function(){
 
     resetIndexes(function() {
         writeUsersToLedger(testData.users);
-        writeThingsToLedger(testData.things);
+        writeOrdersToLedger(testData.orders);
     })
 
 }
@@ -57,21 +57,21 @@ function writeUsersToLedger(users){
     })
 }
 
-function writeThingsToLedger(things){
-    logger.info("[TestData] Number of things:", testData.things.length);
+function writeOrdersToLedger(orders){
+    logger.info("[TestData] Number of orders:", testData.orders);
     
-    things.forEach(function(thing, idx) {
-        let thingAsJson = JSON.stringify(thing);
+    orders.forEach(function(order, idx) {
+        let orderAsJson = JSON.stringify(order);
         
-        logger.info("[TestData] Will add new Thing:");
-        logger.info(thingAsJson);
+        logger.info("[TestData] Will add new Order:");
+        logger.info(orderAsJson);
         
-        const functionName = "add_thing"
-        const args = [thing.id, thingAsJson];
+        const functionName = "add_order"
+        const args = [order.id, orderAsJson];
         const enrollmentId = "WebAppAdmin";
 
         BlockchainService.invoke(functionName,args,enrollmentId).then(function(result){
-            logger.info("[TestData] Added thing: ", thing.id);
+            logger.info("[TestData] Added order: ", order.id);
         }).catch(function(err){
             logger.error(err);
         });

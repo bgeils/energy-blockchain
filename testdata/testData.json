@@ -1,34 +1,54 @@
 {
-	"users":[
-		{
-			"userId":"john1",
-			"password":"passw0rd",
-			"firstName":"John",
-			"lastName":"Doe",
-			"things":["12345678","87654321"],
-            "address": "Dam 1, 1012 JS Amsterdam, The Netherlands",
-            "phoneNumber": "0900 0048",
-            "emailAddress": "johndoe@gmail.com"
-		},
-		{
-			"userId":"jane1",
-			"password":"passw0rd",
-			"firstName":"Jane",
-			"lastName":"Doe",
-			"things":["87654321"],
-            "address": "128 West 44th Street, New York, NY 10036, United States",
-            "phoneNumber": "0900 0024",
-            "emailAddress": "janedoe@gmail.com"
-		}
-	],
-	"things":[
-		{
-			"id":"12345678",
-			"description":"Lorem Ipsum"
-		},
-		{
-			"id":"87654321",
-			"description":"Ipsum Lorem"
-		}
-	]
+	"users": [{
+		"userId": "john1",
+		"password": "passw0rd",
+		"firstName": "John",
+		"lastName": "Doe",
+		"things": ["12345678", "87654321"],
+		"address": "Dam 1, 1012 JS Amsterdam, The Netherlands",
+		"phoneNumber": "0900 0048",
+		"emailAddress": "johndoe@gmail.com"
+	}, {
+		"userId": "jane1",
+		"password": "passw0rd",
+		"firstName": "Jane",
+		"lastName": "Doe",
+		"things": ["87654321"],
+		"address": "128 West 44th Street, New York, NY 10036, United States",
+		"phoneNumber": "0900 0024",
+		"emailAddress": "janedoe@gmail.com"
+	}, {
+		"userId": "jim1",
+		"password": "passw0rd",
+		"firstName": "Jim",
+		"lastName": "Doe",
+		"things": ["87654321"],
+		"address": "128 West 44th Street, New York, NY 10036, United States",
+		"phoneNumber": "0900 0022",
+		"emailAddress": "jimdoe@gmail.com"
+	}, {
+		"userId": "jackie1",
+		"password": "passw0rd",
+		"firstName": "Jackie",
+		"lastName": "Doe",
+		"things": ["87654321"],
+		"address": "128 West 44th Street, New York, NY 10036, United States",
+		"phoneNumber": "0900 0021",
+		"emailAddress": "jackydoe@gmail.com"
+	}],
+	"orders": [{
+		"id": "12345678",
+		"KwhAmount": "0.4",
+		"PriceKwhEuros": "0.22",
+		"TimeStart": "1436260149",
+		"DurationSeconds": "800",
+		"SellerId": "john1",
+		"SoldBool": "true"
+	}],
+	"transactions": [{
+		"id": "9482923859",
+		"OrderId": "12345678",
+		"Seller": "john1",
+		"Buyer": "jane1"
+	}]
 }
