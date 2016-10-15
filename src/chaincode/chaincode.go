@@ -42,8 +42,8 @@ type Order struct {
 	Id        string `json:"id"`
 	KwhAmount string `json:"kwhAmount"`
 	PriceKwh  string `json:"priceKwh"`
-	TimeStart int    `json:"timeStart"`
-	Duration  int    `json:"duration"`
+	TimeStart string `json:"timeStart"`
+	Duration  string `json:"duration"`
 	SellerId  string `json:"sellerId"` // link to userID
 	SoldBool  bool   `json:"soldBool"`
 }
@@ -337,7 +337,7 @@ func (t *SimpleChaincode) get_all_orders(stub *shim.ChaincodeStub, args []string
 	if err != nil {
 		return nil, errors.New("Failed to get " + ordersIndexStr)
 	}
-	// TODO replace thing with order / transaction
+
 	// Unmarshal the index
 	var ordersIndex []string
 	json.Unmarshal(indexAsBytes, &ordersIndex)
@@ -354,11 +354,13 @@ func (t *SimpleChaincode) get_all_orders(stub *shim.ChaincodeStub, args []string
 		json.Unmarshal(bytes, &t)
 		orders = append(orders, t)
 	}
-
+	logger.Infof("SPOT 2")
 	ordersAsJsonBytes, _ := json.Marshal(orders)
 	if err != nil {
 		return nil, errors.New("Could not convert orders to JSON ")
 	}
+	logger.Infof("SPOT 3")
+	logger.Infof( string(ordersAsJsonBytes[1]))
 
 	return ordersAsJsonBytes, nil
 }

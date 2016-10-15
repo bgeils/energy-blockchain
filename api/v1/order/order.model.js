@@ -26,7 +26,7 @@ function Order(    id,
     // Attributes for Thing object
     this.id                  =   id;
     this.KwhAmount         =   KwhAmount;
-    this.PriceKwh      =  PriceKwhEuros;
+    this.PriceKwh      =  PriceKwh;
     this.TimeStart          =  TimeStart;
     this.Duration     =  Duration;
     this.SellerId           = SellerId;
