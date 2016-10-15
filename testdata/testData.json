@@ -44,11 +44,24 @@
 		"DurationSeconds": "800",
 		"SellerId": "john1",
 		"SoldBool": "true"
+	},{
+		"id": "67841276",
+		"KwhAmount": "0.6",
+		"PriceKwhEuros": "0.14",
+		"TimeStart": "1436330149",
+		"DurationSeconds": "800",
+		"SellerId": "john1",
+		"SoldBool": "true"
 	}],
 	"transactions": [{
 		"id": "9482923859",
 		"OrderId": "12345678",
 		"Seller": "john1",
 		"Buyer": "jane1"
+	},{
+		"id": "9482923870",
+		"OrderId": "33456745",
+		"Seller": "john1",
+		"Buyer": "jackie1"
 	}]
 }
