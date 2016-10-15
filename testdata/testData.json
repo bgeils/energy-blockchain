@@ -56,12 +56,12 @@
 	"transactions": [{
 		"id": "9482923859",
 		"OrderId": "12345678",
-		"Seller": "john1",
-		"Buyer": "jane1"
+		"SellerId": "john1",
+		"BuyerId": "jane1"
 	},{
 		"id": "9482923870",
 		"OrderId": "33456745",
-		"Seller": "john1",
-		"Buyer": "jackie1"
+		"SellerId": "john1",
+		"BuyerId": "jackie1"
 	}]
 }
