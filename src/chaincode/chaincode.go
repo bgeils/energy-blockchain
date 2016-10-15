@@ -125,7 +125,9 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 		return t.authenticate(stub, args)
 	} else if function == "get_transaction" {
 		return t.get_transaction(stub, args)
-	}
+	} else if function == "get_all_transactions" {
+		return t.get_all_transactions(stub, args)
+	} 
 
 	// TODO get orders by timeslot
 
@@ -328,7 +330,7 @@ func (t *SimpleChaincode) get_transaction(stub *shim.ChaincodeStub, args []strin
 
 }
 
-// get all transactions
+// get all orders
 func (t *SimpleChaincode) get_all_orders(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
 
 	indexAsBytes, err := stub.GetState(ordersIndexStr)
@@ -359,6 +361,39 @@ func (t *SimpleChaincode) get_all_orders(stub *shim.ChaincodeStub, args []string
 	}
 
 	return ordersAsJsonBytes, nil
+}
+
+//get all transactions
+func (t *SimpleChaincode) get_all_transactions(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+
+	indexAsBytes, err := stub.GetState(transactionsIndexStr)
+	if err != nil {
+		return nil, errors.New("Failed to get " + transactionsIndexStr)
+	}
+	// TODO replace thing with order / transaction
+	// Unmarshal the index
+	var transactionsIndex []string
+	json.Unmarshal(indexAsBytes, &transactionsIndex)
+
+	var transactions []Transaction
+	for _, transaction := range transactionsIndex {
+
+		bytes, err := stub.GetState(transaction)
+		if err != nil {
+			return nil, errors.New("Unable to get order with ID: " + transaction)
+		}
+
+		var t Transaction
+		json.Unmarshal(bytes, &t)
+		transactions = append(transactions, t)
+	}
+
+	transactionsAsJsonBytes, _ := json.Marshal(transactions)
+	if err != nil {
+		return nil, errors.New("Could not convert transactions to JSON ")
+	}
+
+	return transactionsAsJsonBytes, nil
 }
 
 func (t *SimpleChaincode) authenticate(stub *shim.ChaincodeStub, args []string) ([]byte, error) {

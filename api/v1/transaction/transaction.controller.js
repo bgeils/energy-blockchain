@@ -1,31 +1,32 @@
 'use strict';
 
-const Order = require('./order.model');
+const Transaction = require('./transaction.model');
 const BlockchainService = require('../../../blockchainServices/blockchainSrvc.js');
 const enrollID = require('../../../utils/enrollID')
 
 /*
-    Retrieve list of all orders
+    Retrieve list of all transactions
 
     METHOD: GET
-    URL : /api/v1/order
+    URL : /api/v1/transaction
     Response:
-        [{'order'}, {'order'}]
+        [{'transaction'}, {'transaction'}]
 */
 exports.list = function(req, res) {
-    console.log("-- Query all orders --")
+    console.log("-- Query all transactions --")
     
     var userID = enrollID.getID(req);
     
-    const functionName = "get_all_orders"
+    const functionName = "get_all_transactions"
     const args = [userID];
     const enrollmentId = userID;
-    BlockchainService.query(functionName,args,enrollmentId).then(function(orders){
-        if (!orders) {
+
+    BlockchainService.query(functionName,args,enrollmentId).then(function(transactions){
+        if (!transactions) {
             res.json([]);
         } else {
-            console.log("Retrieved things from the blockchain: # " + orders.length);
-            res.json(orders)
+            console.log("Retrieved things from the blockchain: # " + transactions.length);
+            res.json(transactions)
         }
     }).catch(function(err){
         console.log("Error", err);
@@ -34,26 +35,26 @@ exports.list = function(req, res) {
 }
 
 /*
-    Retrieve order object
+    Retrieve transaction object
 
     METHOD: GET
-    URL: /api/v1/order/:orderId
+    URL: /api/v1/transaction/:transactionId
     Response:
-        { order }
+        { transaction }
 */
 exports.detail = function(req, res) {
     console.log("-- Query thing --")
     
-    const functionName = "get_order"
-    const args = [req.params.orderId];
+    const functionName = "get_transaction"
+    const args = [req.params.transactionId];
     const enrollmentId = enrollID.getID(req);
     
-    BlockchainService.query(functionName,args,enrollmentId).then(function(order){
-        if (!order) {
+    BlockchainService.query(functionName,args,enrollmentId).then(function(transaction){
+        if (!transaction) {
             res.json([]);
         } else {
-            console.log("Retrieved order from the blockchain");
-            res.json(order)
+            console.log("Retrieved transaction from the blockchain");
+            res.json(transaction)
         }
     }).catch(function(err){
         console.log("Error", err);

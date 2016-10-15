@@ -14,6 +14,7 @@ exports.invokeTestData = function(){
     resetIndexes(function() {
         writeUsersToLedger(testData.users);
         writeOrdersToLedger(testData.orders);
+        writeTransactionsToLedger(testData.transactions);
     })
 
 }
@@ -77,3 +78,25 @@ function writeOrdersToLedger(orders){
         });
     })
 }
+
+function writeTransactionsToLedger(transactions){
+    logger.info("[TestData] Number of transactions:", testData.transactions);
+    
+    transactions.forEach(function(transaction, idx) {
+        let transactionAsJson = JSON.stringify(transaction);
+        
+        logger.info("[TestData] Will add new Transaction:");
+        logger.info(transactionAsJson);
+        
+        const functionName = "add_transaction"
+        const args = [transaction.id, transactionAsJson];
+        const enrollmentId = "WebAppAdmin";
+
+        BlockchainService.invoke(functionName,args,enrollmentId).then(function(result){
+            logger.info("[TestData] Added transaction: ", transaction.id);
+        }).catch(function(err){
+            logger.error(err);
+        });
+    })
+}
+
